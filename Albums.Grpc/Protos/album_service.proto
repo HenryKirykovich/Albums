@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+// C# namespace for the generated classes (used by BOTH the server and the WinForms client)
+option csharp_namespace = "AlbumsGrpc";
+
+package albums;
+
+// ------------------------------------------------------------
+// Album message - one album in the inventory
+// Fields required by the assignment: ID, Title, Artist, Genre, Year, Available
+// ------------------------------------------------------------
+message Album {
+  string id = 1;
+  string title = 2;
+  string artist = 3;
+  string genre = 4;
+  int32 year = 5;
+  bool available = 6;
+}
+
+// ---------------- Request messages ----------------
+message AddAlbumRequest {
+  string title = 1;
+  string artist = 2;
+  string genre = 3;
+  int32 year = 4;
+  bool available = 5;
+}
+
+message GetAlbumRequest {
+  string id = 1;
+}
+
+message UpdateAlbumRequest {
+  string id = 1;
+  string title = 2;
+  string artist = 3;
+  string genre = 4;
+  int32 year = 5;
+  bool available = 6;
+}
+
+message DeleteAlbumRequest {
+  string id = 1;
+}
+
+message ListAlbumsRequest {
+  // empty - returns all albums
+}
+
+// ---------------- Response messages ----------------
+message AddAlbumResponse {
+  Album album = 1;
+}
+
+message GetAlbumResponse {
+  Album album = 1;
+}
+
+message UpdateAlbumResponse {
+  Album album = 1;
+}
+
+message DeleteAlbumResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ---------------- Real-time updates (bidirectional streaming) ----------------
+
+// Client -> Server: "tell me about changes". The client can send this message
+// at any time to change the filter (empty genre_filter = all albums).
+message WatchRequest {
+  string genre_filter = 1;
+}
+
+// Server -> Client: pushed every time an album is added / updated / deleted.
+message AlbumEvent {
+  string type = 1;   // "Added", "Updated" or "Deleted"
+  Album album = 2;   // the album that changed
+}
+
+// ------------------------------------------------------------
+// The gRPC service definition
+// ------------------------------------------------------------
+service AlbumService {
+  // Add a new album to the inventory
+  rpc AddAlbum (AddAlbumRequest) returns (AddAlbumResponse);
+
+  // Get one album by ID
+  rpc GetAlbum (GetAlbumRequest) returns (GetAlbumResponse);
+
+  // Update an existing album
+  rpc UpdateAlbum (UpdateAlbumRequest) returns (UpdateAlbumResponse);
+
+  // Delete an album from the inventory
+  rpc DeleteAlbum (DeleteAlbumRequest) returns (DeleteAlbumResponse);
+
+  // List all albums - SERVER streaming (server sends albums one by one)
+  rpc ListAlbums (ListAlbumsRequest) returns (stream Album);
+
+  // Live updates - BIDIRECTIONAL streaming (both sides send messages at the same time)
+  rpc WatchAlbums (stream WatchRequest) returns (stream AlbumEvent);
+}
